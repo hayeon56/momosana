@@ -127,7 +127,7 @@ function image_delete(){
     <style type="text/css">
       .my-box { border:1px solid; padding:10px; width: 1000px;}
       .my-box2 { border:1px dashed; padding:10px; width: 800px;}
-      table, th, td{
+      table{
         width: 500px;
         height: 100px;
       }
@@ -138,7 +138,7 @@ function image_delete(){
     <h1>商品登録</h1>
     <div class="my-box">
     <h2>基本情報</h2>
-    <form name="momoform" action="/momoControllers/momoController.php/itemRegistration" onsubmit="return test()" method="post" id="sou">
+    <form name="momoform" action="momo/momoControllers/momoController.php/itemRegistration" onsubmit="return test()" method="post" id="sou">
     <strong>商品番号</strong><br><br><input type="text" name="item_code" placeholder="商品番号" >
     <p>※半角英数字「-（ハイフン）」、「_（アンダーバー）」64文字以内</p>
     <hr>
