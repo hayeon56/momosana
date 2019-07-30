@@ -23,7 +23,6 @@ class Momo{
     curl_errno($curl);
     curl_close($curl);
     $data_json =  json_decode($result, true);//배열로 바꾸기
-    print_r($data_json);
   }
 
   //POST
@@ -54,8 +53,6 @@ class Momo{
   public function put($url,$item_data){
 
     $data_json = json_encode($item_data,JSON_UNESCAPED_UNICODE);
-    echo "<br>";
-    echo print_r($data_json);
     $curl = curl_init();
     curl_setopt($curl, CURLOPT_URL, $url);
     curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($data_json)));
@@ -66,8 +63,7 @@ class Momo{
     $result  = curl_exec($curl);
     curl_errno($curl);
     curl_close($curl);
-
-    // print_r($data_json);
+    $return_data =  json_decode($result, true);
 
   }
 
@@ -85,12 +81,6 @@ class Momo{
     $item_code = $_POST['item_code'];
     $item_name = $_POST['item_name'];
 
-    echo "<br>".$item_code."<br>";
-      echo "<br>".$item_name."<br>";
-
-    //예외처리
-
-
     $item_data = array('item_code'=>$item_code,
                        'item_name'=>$item_name);
 
@@ -101,44 +91,25 @@ class Momo{
     //商品登録(ect.)
     $consumption_tax_setting = $_POST['consumption_tax_setting'];
     $item_price = $_POST['item_price'];
-    $regular_price_type = $_POST['regular_price_type'];
-    $regular_price_name = $_POST['regular_price_name'];
-    $regular_price = $_POST['regular_price'];
     $item_unit = $_POST['item_unit'];
     $memo = $_POST['memo'];
-
-      echo "<br>".$consumption_tax_setting."<br>";
-        echo "<br>".$item_price."<br>";
-          echo "<br>".$regular_price_type."<br>";
-            echo "<br>".$regular_price_name."<br>";
-              echo "<br>".$regular_price."<br>";
-                echo "<br>".$item_unit."<br>";
-                  echo "<br>".$item_code."<br>";
-                    echo "<br>".$memo."<br>";
-
-
-
 
     $item_ect_data = array(
                             'item_name'=>$item_name,
                             'consumption_tax_setting'=>$consumption_tax_setting,
                             'item_price'=>(int)$item_price,
-                            'regular_price_type'=>$regular_price_type,
-                            'regular_price_name'=>$regular_price_name,
                             'item_unit'=>$item_unit,
                             'memo'=>$memo);
      $url = "https://management.api.shopserve.jp/v2/items/$item_code/basic";
      $this->put($url,$item_ect_data);
+
      //商品登録(カテゴリ)
      $item_category = $_POST['item_category'];
 
      $item_category_words = array();
      $item_category_words = explode('>',$item_category);
 
-     echo  print_r($item_category_words);
-
      $num = (int)sizeof($item_category_words);
-     echo "<br>num".$num;
 
      for($i = 0; $i < count($item_category_words); $i++){
        $array["category"][$i] = $item_category_words[$i];
@@ -148,10 +119,113 @@ class Momo{
      );
      $url = "https://management.api.shopserve.jp/v2/items/$item_code/categories";
      $this->put($url,$array);
+     echo "<script>alert('商品登録完了');";
+     echo "document.location.href=\"/momoViews/itemRegistration.php\";</script>";
+
+    //商品配送情報更新
+    $bundle_packing = $_POST['bundle_packing'];
+    if($_POST['delivery_type']){
+      $delivery_type = $_POST['delivery_type'];
+    }
+    else{
+      $delivery_type = "Standard";
+    }
+    if($_POST['enable_specific_shipping_charge']){
+      $enable_specific_shipping_charge = $_POST['enable_specific_shipping_charge'];
+    }
+    else{
+      $enable_specific_shipping_charge = "No";
+    }
+    if($_POST['display_type']){
+      $display_type = $_POST['display_type'];
+    }
+    else{
+      $display_type = "Free";
+    }
+
+    if($_POST['prior']){
+      $prior = $_POST['prior'];
+    }
+    else{
+      $prior = "No";
+    }
+
+    if($_POST['temperature_controlled1']){
+      $temperature_controlled = "Cold";
+    }
+    else if($_POST['temperature_controlled2']){
+      $temperature_controlled = "Freeze";
+    }
+    else{
+      $temperature_controlled = "NoControl";
+    }
+
+    if($_POST['specific_shipping_charge']){
+      $specific_shipping_charge = $_POST['specific_shipping_charge'];
+    }
+    else{
+      $specific_shipping_charge = 0;
+    }
+    if($delivery_type == "Mail"){
+    $delivery_data = array(
+                            'bundle_packing'=>$bundle_packing,
+                            'delivery_type'=>$delivery_type);
+    }
+    else if($enable_specific_shipping_charge == "No"){
+      $delivery_data = array(
+                              'bundle_packing'=>$bundle_packing,
+                              'delivery_type'=>$delivery_type,
+                              'enable_specific_shipping_charge'=>$enable_specific_shipping_charge,
+                              'temperature_controlled'=>$temperature_controlled);
+    }
+    else if($enable_specific_shipping_charge == "Yes"){
+      $delivery_data = array(
+                              'bundle_packing'=>$bundle_packing,
+                              'delivery_type'=>$delivery_type,
+                              'enable_specific_shipping_charge'=>'Yes', //$enable_specific_shipping_charge
+                              'specific_shipping_charge'=>(int)$specific_shipping_charge,
+                              'temperature_controlled'=>$temperature_controlled,
+                              'display_type'=>$display_type);
+    }
+
+    $url = "https://management.api.shopserve.jp/v2/items/$item_code/shipping";
+    $this->put($url,$delivery_data);
+
+    //画像登録
+    $image_name = $_POST['image_name'];
+    $is_main = $_POST['is_main'];
+
+    $image_data = array(
+      "image_name"=>$image_name,
+      "is_main"=>$is_main
+    );
+    $image_array = array(
+      "images" => [$image_data]
+    );
+
+    $url = "https://management.api.shopserve.jp/v2/items/$item_code/images";
+    $this->put($url,$image_array);
+
+    //PC紹介文登録
+    $main_description = $_POST['main_description'];
+    $sub_description1 = $_POST['sub_description1'];
+    $sub_description2 = $_POST['sub_description2'];
+    $sales_copy = $_POST['sales_copy'];
+
+    $description_array = array(
+      "main_description"=>$main_description,
+      "sub_description1"=>$sub_description1,
+      "sub_description2"=>$sub_description2,
+      "sales_copy"=>$sales_copy
+    );
+    $url = "https://management.api.shopserve.jp/v2/items/$item_code/description/pc";
+    $this->put($url,$description_array);
 
   }
 
+
 }
+
 $Momo = new Momo;
 $Momo->itemInformation();
 $Momo->itemRegistration();
